@@ -23,7 +23,7 @@ namespace Notifications
         }
 
         VkApi Vk;
-        VkNet.Model.WallGetObject wallPosts;
+        List<VkNet.Model.Post> wallPosts;
         long? OwnerId;
 
         public Form1(VkApi vk)
@@ -57,7 +57,7 @@ namespace Notifications
             {
                 Count = 2,
                 OwnerId = -OwnerId
-            });
+            }).WallPosts.ToList();
             t.Start();
             label3.Visible = true;
         }
@@ -68,18 +68,39 @@ namespace Notifications
             {
                 OwnerId=-OwnerId,
                 Count = 2
-            });           
+            }).WallPosts.ToList();           
             
-            if (res.WallPosts[1].Date != wallPosts.WallPosts[1].Date)
+            if (res[0].IsPinned!= true)
             {
-                var client = new SmtpClient("smtp.gmail.com", 587)
+                if (res[0].Id > wallPosts[0].Id)
                 {
-                    Credentials = new NetworkCredential("notidicationsender@gmail.com", "we34n8xza"),
-                    EnableSsl = true
-                };
-                client.Send("notidicationsender@gmail.com", textBox2.Text, "Новый пост в группе " + textBox1.Text, $"Ссылка на пост: https://vk.com/{textBox1.Text.Split('/').Last()}?w=wall" + res.WallPosts[0].ToString().Substring(4));
-                wallPosts = res;
-            }            
+                    var client = new SmtpClient("smtp.gmail.com", 587)
+                    {
+                        Credentials = new NetworkCredential("notidicationsender@gmail.com", "we34n8xza"),
+                        EnableSsl = true
+                    };
+                    client.Send("notidicationsender@gmail.com", textBox2.Text, "Новый пост в группе " + textBox1.Text, res[0].Text);
+                    wallPosts = res;
+                }
+            }
+            else
+            {
+                if (res[1].Id > wallPosts[1].Id)
+                {
+                    var client = new SmtpClient("smtp.gmail.com", 587)
+                    {
+                        Credentials = new NetworkCredential("notidicationsender@gmail.com", "we34n8xza"),
+                        EnableSsl = true
+                    };
+                    client.Send("notidicationsender@gmail.com", textBox2.Text, "Новый пост в группе " + textBox1.Text, res[1].Text );
+                    wallPosts = res;
+                }
+            }                  
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
